@@ -39,16 +39,17 @@ def get_lora_client():
     except Exception as e:
         error_msg = str(e)
         print(f"❌ Failed to load {model_name}: {error_msg}")
+        print(f"❌ Full exception: {repr(e)}")
 
         # Give specific error messages
         if "401" in error_msg or "unauthorized" in error_msg.lower():
             return None, "❌ Authentication failed. Check your HF_TOKEN in Railway environment variables."
+        elif "403" in error_msg or "forbidden" in error_msg.lower() or "gated" in error_msg.lower():
+            return None, f"❌ Model access denied: {model_name}\n\nYour model appears to be private/gated. To fix this:\n1. Go to https://huggingface.co/{model_name}\n2. Click 'Settings' → 'Visibility' → Make it 'Public'\n3. OR ensure your HF_TOKEN has proper permissions for private models\n4. Refresh this page after changing visibility\n\nFull error: {error_msg}"
         elif "404" in error_msg or "not found" in error_msg.lower():
             return None, f"❌ Model not found: {model_name}\n\nThis means your merged model hasn't been created yet. Please:\n1. Run the merge script in Google Colab\n2. Wait for upload to complete\n3. Verify your model exists at: https://huggingface.co/{model_name}"
-        elif "gated" in error_msg.lower():
-            return None, f"❌ Model access denied. Make sure you have access to the base model (Llama-3.1-8B-Instruct) and your merged model."
         else:
-            return None, f"❌ Error loading your model: {error_msg}\n\nFull error details: {str(e)}\n\nTroubleshooting:\n1. Verify model exists: https://huggingface.co/{model_name}\n2. Check HF_TOKEN permissions\n3. Model might still be processing on HuggingFace (wait 5-10 minutes)\n4. Try the refresh button"
+            return None, f"❌ Error loading your model: {error_msg}\n\nFull error details: {repr(e)}\n\nTroubleshooting:\n1. Verify model exists: https://huggingface.co/{model_name}\n2. Check HF_TOKEN permissions\n3. Make model public or ensure token has private model access\n4. Model might still be processing on HuggingFace (wait 5-10 minutes)\n5. Try the refresh button"
 
 # Initialize your LoRA model
 client, status_message = get_lora_client()
