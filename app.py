@@ -174,6 +174,7 @@ with gr.Blocks(
             with gr.TabItem("💬 General Chat"):
                 chatbot = gr.ChatInterface(
                     fn=lambda msg, hist: chat_interface(msg, hist, temperature.value, max_length.value),
+                    type="messages",
                     examples=[
                         "What's the most interesting book in my collection?",
                         "Tell me about the themes in my library",
