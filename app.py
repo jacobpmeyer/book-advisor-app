@@ -2,8 +2,8 @@ import gradio as gr
 from huggingface_hub import InferenceClient
 import os
 
-# Configuration - ONLY your trained model
-model_name = "jacobpmeyer/book-advisor-lora"
+# Configuration - ONLY your trained model (merged version for Inference API)
+model_name = "jacobpmeyer/book-advisor-merged"
 hf_token = os.getenv("HF_TOKEN")
 
 def get_lora_client():
@@ -44,9 +44,9 @@ def get_lora_client():
         if "401" in error_msg or "unauthorized" in error_msg.lower():
             return None, "❌ Authentication failed. Check your HF_TOKEN in Railway environment variables."
         elif "404" in error_msg or "not found" in error_msg.lower():
-            return None, f"❌ Model not found: {model_name}\n\nThis means your LoRA training hasn't completed yet or failed to upload. Please:\n1. Complete training in Google Colab\n2. Run the upload cell (Cell 6)\n3. Verify your model exists at: https://huggingface.co/{model_name}"
+            return None, f"❌ Model not found: {model_name}\n\nThis means your merged model hasn't been created yet. Please:\n1. Run the merge script in Google Colab\n2. Wait for upload to complete\n3. Verify your model exists at: https://huggingface.co/{model_name}"
         elif "gated" in error_msg.lower():
-            return None, f"❌ Model access denied. Make sure you have access to the base model (Llama-3.1-8B-Instruct) and your LoRA model."
+            return None, f"❌ Model access denied. Make sure you have access to the base model (Llama-3.1-8B-Instruct) and your merged model."
         else:
             return None, f"❌ Error loading your model: {error_msg}\n\nTroubleshooting:\n1. Verify model exists: https://huggingface.co/{model_name}\n2. Check HF_TOKEN permissions\n3. Ensure training completed successfully"
 
@@ -130,21 +130,22 @@ with gr.Blocks(
 
         Your personalized book advisor isn't ready yet. Here's what to do:
 
-        #### If you haven't completed training:
-        1. **Go back to Google Colab** and complete the training process
-        2. **Run all cells** especially the upload cell (Cell 6)
-        3. **Wait for upload** to finish (shows "Model uploaded successfully!")
+        #### If you haven't created the merged model:
+        1. **Your LoRA training is complete** (jacobpmeyer/book-advisor-lora exists)
+        2. **Run the merge script** in Google Colab (creates the Inference API compatible version)
+        3. **Wait for upload** to finish (creates jacobpmeyer/book-advisor-merged)
         4. **Come back here** and refresh the page
 
-        #### If training is complete:
+        #### If merge script is complete:
         1. **Check your model exists**: [https://huggingface.co/{model_name}](https://huggingface.co/{model_name})
         2. **Verify HF_TOKEN** in Railway environment variables
         3. **Check model visibility** (should be public or you have access)
 
-        #### Training Status Check:
+        #### Setup Status Check:
         - ✅ Google Colab training completed?
-        - ✅ Model uploaded to HuggingFace?
-        - ✅ Model visible at the link above?
+        - ✅ LoRA model uploaded to HuggingFace?
+        - ✅ Merge script run successfully?
+        - ✅ Merged model visible at the link above?
         - ✅ HF_TOKEN set in Railway?
 
         **This app ONLY works with your trained model - no substitutes!**
@@ -263,7 +264,7 @@ with gr.Blocks(
         ---
         **🎯 This AI knows YOUR books**: Responses are based exclusively on Jacob's personal library
         **🚫 No generic responses**: Only recommendations and insights from your actual collection
-        **⚡ Powered by**: Your custom LoRA model trained on your epub files
+        **⚡ Powered by**: Your custom merged model (LoRA + Llama-3.1-8B-Instruct)
         """)
 
 # Launch the app
