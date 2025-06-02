@@ -81,7 +81,10 @@ def generate_response(instruction, input_text="", max_length=400, temperature=0.
                 raise e
 
     except Exception as e:
-        return f"❌ Error with your model: {str(e)[:300]}...\n\nYour LoRA model exists but encountered an error. Try refreshing or check the logs."
+        error_msg = str(e)
+        print(f"❌ Generation error: {error_msg}")
+        print(f"❌ Full exception: {repr(e)}")
+        return f"❌ Error with your model: {error_msg}\n\nFull error: {repr(e)}\n\nYour LoRA model exists but encountered an error. Try refreshing or check the logs."
 
 def chat_interface(message, history, temperature, max_length):
     """Chat interface - only your LoRA model"""
