@@ -51,38 +51,22 @@ def generate_response(instruction, input_text="", max_length=400, temperature=0.
         prompt = f"### Instruction:\n{instruction}\n\n### Response:\n"
 
     try:
-        # Try conversational API first (more reliable for some models)
-        try:
-            response = client.conversational({
-                "text": prompt,
-                "past_user_inputs": [],
-                "generated_responses": []
-            })
-            if isinstance(response, dict):
-                if "generated_text" in response:
-                    return response["generated_text"].strip()
-                elif "conversation" in response and "generated_responses" in response["conversation"]:
-                    responses = response["conversation"]["generated_responses"]
-                    if responses:
-                        return responses[-1].strip()
-            return str(response).strip()
-
-        except Exception as conv_error:
-            print(f"⚠️ Conversational API failed: {conv_error}")
-            # Fallback to text generation
-            try:
-                response = client.text_generation(
-                    prompt,
-                    max_new_tokens=max_length,
-                    temperature=temperature,
-                    repetition_penalty=1.1,
-                    top_p=0.9,
-                    return_full_text=False
-                )
-                return response.strip()
-            except Exception as text_error:
-                print(f"⚠️ Text generation also failed: {text_error}")
-                raise conv_error  # Raise the original conversational error
+        # Use text generation with better parameters to avoid StopIteration
+        response = client.text_generation(
+            prompt,
+            max_new_tokens=max_length,
+            temperature=temperature,
+            repetition_penalty=1.1,
+            top_p=0.9,
+            return_full_text=False,
+            do_sample=True,
+            stop_sequences=["###", "\n\n\n"]
+        )
+        
+        if response and len(response.strip()) > 0:
+            return response.strip()
+        else:
+            return "I apologize, but I couldn't generate a response. Please try rephrasing your question."
 
     except Exception as e:
         error_msg = str(e)
