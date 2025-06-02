@@ -51,22 +51,39 @@ def generate_response(instruction, input_text="", max_length=400, temperature=0.
         prompt = f"### Instruction:\n{instruction}\n\n### Response:\n"
 
     try:
-        # Use text generation with better parameters to avoid StopIteration
-        response = client.text_generation(
-            prompt,
-            max_new_tokens=max_length,
-            temperature=temperature,
-            repetition_penalty=1.1,
-            top_p=0.9,
-            return_full_text=False,
-            do_sample=True,
-            stop_sequences=["###", "\n\n\n"]
-        )
+        # Try chat completions API instead
+        messages = [
+            {"role": "user", "content": prompt}
+        ]
         
-        if response and len(response.strip()) > 0:
-            return response.strip()
-        else:
-            return "I apologize, but I couldn't generate a response. Please try rephrasing your question."
+        try:
+            response = client.chat_completion(
+                messages=messages,
+                max_tokens=max_length,
+                temperature=temperature
+            )
+            
+            if response and hasattr(response, 'choices') and response.choices:
+                return response.choices[0].message.content.strip()
+            elif isinstance(response, dict) and 'choices' in response:
+                return response['choices'][0]['message']['content'].strip()
+            else:
+                return str(response).strip()
+                
+        except Exception as chat_error:
+            print(f"⚠️ Chat completion failed: {chat_error}")
+            # Fallback to basic text generation without problematic parameters
+            response = client.text_generation(
+                prompt,
+                max_new_tokens=min(max_length, 200),  # Reduce max tokens
+                temperature=min(temperature, 0.8),    # Reduce temperature
+                return_full_text=False
+            )
+            
+            if response and len(response.strip()) > 0:
+                return response.strip()
+            else:
+                return "I apologize, but I couldn't generate a response. Please try rephrasing your question."
 
     except Exception as e:
         error_msg = str(e)
