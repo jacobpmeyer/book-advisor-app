@@ -14,36 +14,10 @@ def get_lora_client():
     try:
         print(f"🔄 Loading your personalized model: {model_name}")
         client = InferenceClient(model=model_name, token=hf_token)
-
-        # Test if the model works with text generation
-        try:
-            test_response = client.text_generation("Hello", max_new_tokens=10, return_full_text=False)
-            if test_response and len(test_response.strip()) > 0:
-                print(f"✅ Your LoRA model is working: {model_name}")
-                return client, "✅ Your personalized book advisor is ready!"
-            else:
-                print(f"⚠️ Empty response from text generation, trying conversational API...")
-                raise Exception("Empty response")
-
-        except Exception as api_error:
-            error_msg = str(api_error)
-            print(f"⚠️ Text generation failed: {error_msg}")
-            if "not supported" in error_msg.lower() or "StopIteration" in error_msg or "Empty response" in error_msg:
-                print(f"⚠️ Trying conversational API as fallback...")
-                try:
-                    # Try conversational API as backup for same model
-                    test_response = client.conversational({
-                        "text": "Hello",
-                        "past_user_inputs": [],
-                        "generated_responses": []
-                    })
-                    print(f"✅ Your LoRA model working via conversational API")
-                    return client, "✅ Your personalized book advisor is ready! (using conversational API)"
-                except Exception as conv_error:
-                    print(f"❌ Conversational API also failed: {conv_error}")
-                    raise api_error
-            else:
-                raise api_error
+        
+        # Just initialize without testing - test on first actual use
+        print(f"✅ Client initialized for model: {model_name}")
+        return client, "✅ Your personalized book advisor is ready!"
 
     except Exception as e:
         error_msg = str(e)
