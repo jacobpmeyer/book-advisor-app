@@ -159,42 +159,6 @@ with gr.Blocks(
         **Current Error**: {status_message}
         """)
 
-    # Add logs display
-    with gr.Row():
-        logs_button = gr.Button("📋 Show Debug Logs", size="sm")
-        logs_output = gr.Textbox(
-            label="Debug Information",
-            lines=10,
-            interactive=False,
-            visible=False
-        )
-
-    def show_debug_info():
-        debug_info = f"""
-🔍 DEBUG INFORMATION:
-
-Environment Variables:
-- MODEL_NAME: {model_name}
-- HF_TOKEN: {"✅ Set (" + hf_token[:10] + "...)" if hf_token else "❌ Not set"}
-
-Model Status:
-- Client Initialized: {is_working}
-- Status Message: {status_message}
-
-Next Steps:
-1. Verify model exists: https://huggingface.co/{model_name}
-2. Check model is public or you have access
-3. Wait 5-10 minutes if just uploaded
-4. Refresh this page
-
-If model exists but still failing:
-- Check HuggingFace status page
-- Try again in a few minutes
-- Model might still be loading/processing
-        """
-        return gr.update(value=debug_info, visible=True)
-
-    logs_button.click(show_debug_info, outputs=logs_output)
     else:
         # Only show the interface if the model is working
 
