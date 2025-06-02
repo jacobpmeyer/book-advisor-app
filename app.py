@@ -48,7 +48,7 @@ def get_lora_client():
         elif "gated" in error_msg.lower():
             return None, f"❌ Model access denied. Make sure you have access to the base model (Llama-3.1-8B-Instruct) and your merged model."
         else:
-            return None, f"❌ Error loading your model: {error_msg}\n\nTroubleshooting:\n1. Verify model exists: https://huggingface.co/{model_name}\n2. Check HF_TOKEN permissions\n3. Ensure training completed successfully"
+            return None, f"❌ Error loading your model: {error_msg}\n\nFull error details: {str(e)}\n\nTroubleshooting:\n1. Verify model exists: https://huggingface.co/{model_name}\n2. Check HF_TOKEN permissions\n3. Model might still be processing on HuggingFace (wait 5-10 minutes)\n4. Try the refresh button"
 
 # Initialize your LoRA model
 client, status_message = get_lora_client()
@@ -130,6 +130,11 @@ with gr.Blocks(
 
         Your personalized book advisor isn't ready yet. Here's what to do:
 
+        #### Debug Information:
+        - **Model Name**: `{model_name}`
+        - **HF Token**: {"✅ Set" if hf_token else "❌ Missing"} ({hf_token[:10] + "..." if hf_token else "None"})
+        - **Model URL**: [Check if model exists](https://huggingface.co/{model_name})
+
         #### If you haven't created the merged model:
         1. **Your LoRA training is complete** (jacobpmeyer/book-advisor-lora exists)
         2. **Run the merge script** in Google Colab (creates the Inference API compatible version)
@@ -140,6 +145,7 @@ with gr.Blocks(
         1. **Check your model exists**: [https://huggingface.co/{model_name}](https://huggingface.co/{model_name})
         2. **Verify HF_TOKEN** in Railway environment variables
         3. **Check model visibility** (should be public or you have access)
+        4. **Wait 5-10 minutes** if model was just uploaded (HuggingFace processing time)
 
         #### Setup Status Check:
         - ✅ Google Colab training completed?
@@ -149,8 +155,46 @@ with gr.Blocks(
         - ✅ HF_TOKEN set in Railway?
 
         **This app ONLY works with your trained model - no substitutes!**
+
+        **Current Error**: {status_message}
         """)
 
+    # Add logs display
+    with gr.Row():
+        logs_button = gr.Button("📋 Show Debug Logs", size="sm")
+        logs_output = gr.Textbox(
+            label="Debug Information",
+            lines=10,
+            interactive=False,
+            visible=False
+        )
+
+    def show_debug_info():
+        debug_info = f"""
+🔍 DEBUG INFORMATION:
+
+Environment Variables:
+- MODEL_NAME: {model_name}
+- HF_TOKEN: {"✅ Set (" + hf_token[:10] + "...)" if hf_token else "❌ Not set"}
+
+Model Status:
+- Client Initialized: {is_working}
+- Status Message: {status_message}
+
+Next Steps:
+1. Verify model exists: https://huggingface.co/{model_name}
+2. Check model is public or you have access
+3. Wait 5-10 minutes if just uploaded
+4. Refresh this page
+
+If model exists but still failing:
+- Check HuggingFace status page
+- Try again in a few minutes
+- Model might still be loading/processing
+        """
+        return gr.update(value=debug_info, visible=True)
+
+    logs_button.click(show_debug_info, outputs=logs_output)
     else:
         # Only show the interface if the model is working
 
